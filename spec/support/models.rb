@@ -11,7 +11,7 @@ ActiveRecord::Schema.define do
     t.string   :title
     t.text     :body
     t.string   :content_type
-    t.string   :hidden
+    t.string   :hidden_field
     t.integer  :user_id
     t.integer  :category_id
     t.timestamps null: false
@@ -26,10 +26,18 @@ ActiveRecord::Schema.define do
     t.boolean  :admin
     t.timestamps null: false
   end
+
+  create_table :profiles, force: true do |t|
+    t.references :user, index: true, foreign_key: true
+    t.string   :nickname
+    t.string   :location
+    t.timestamps null: false
+  end
 end
 
 # Models
 class User < ActiveRecord::Base
+  has_one :profile
   has_many :posts
   validates :first_name, :last_name, presence: true
 
@@ -41,17 +49,22 @@ end
 class Post < ActiveRecord::Base
   belongs_to :author, class_name: 'User', foreign_key: :user_id
   belongs_to :category
-  validates :title, :body, :content_type, :hidden, :author, :category_id, presence: true
+  validates :title, :body, :content_type, :hidden_field, :author, :category_id, presence: true
   validate :trip_hidden_error
 
   private
 
   def trip_hidden_error
-    errors.add(:hidden, 'error was tripped') if title == 'Fail Hidden'
+    errors.add(:hidden_field, 'error was tripped') if title == 'Fail Hidden'
   end
 end
 
 class Category < ActiveRecord::Base
   has_many :posts
   validates :title, presence: true
+end
+
+class Profile < ActiveRecord::Base
+  belongs_to :user
+  validates :nickname, :location, presence: true
 end
